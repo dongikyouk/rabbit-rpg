@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🐰 토끼 마법사 RPG · D-74</title>
+<style>
+  :root {
+    --bg-primary: #FAFAF7;
+    --bg-secondary: #F0EFEA;
+    --bg-tertiary: #E5E4DF;
+    --bg-info: #FCE9F1;
+    --text-primary: #1A1915;
+    --text-secondary: #5C5B57;
+    --text-tertiary: #888780;
+    --text-info: #993556;
+    --border-tertiary: #D6D5D0;
+    --border-secondary: #B8B7B2;
+    --border-info: #D4537E;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --carrot: #EF7A1F;
+    --bunny-pink: #ED93B1;
+    --grass: #639922;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg-primary: #1A1915;
+      --bg-secondary: #25241F;
+      --bg-tertiary: #35342E;
+      --bg-info: #3D1F2C;
+      --text-primary: #F2F1EC;
+      --text-secondary: #A8A7A2;
+      --text-tertiary: #76756F;
+      --text-info: #F4B4CC;
+      --border-tertiary: #3A3934;
+      --border-secondary: #5C5B56;
+      --border-info: #ED93B1;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+  .container { max-width: 480px; margin: 0 auto; padding: 16px; }
+  h1, h2, p { margin: 0; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes hop {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  @keyframes levelUp {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2) rotate(-5deg); filter: brightness(1.4); }
+    100% { transform: scale(1); }
+  }
+  .tab-btn {
+    flex: 1; padding: 10px 4px; font-size: 12px; font-weight: 500;
+    background: transparent; border: 0.5px solid var(--border-tertiary);
+    color: var(--text-secondary); cursor: pointer;
+    border-radius: var(--radius-md); transition: all 0.15s;
+    font-family: inherit;
+  }
+  .tab-btn.active {
+    background: var(--bg-info); color: var(--text-info); border-color: var(--border-info);
+  }
+  .panel { animation: fadeIn 0.3s ease; }
+  .skill-row { padding: 12px; background: var(--bg-secondary); border-radius: var(--radius-md); margin-bottom: 6px; }
+  .stat-card { background: var(--bg-secondary); padding: 12px; border-radius: var(--radius-md); text-align: center; }
+  .action-btn {
+    cursor: pointer; padding: 12px; font-size: 14px; font-weight: 500;
+    border: 0.5px solid var(--border-secondary);
+    background: var(--bg-primary); color: var(--text-primary);
+    border-radius: var(--radius-md); transition: all 0.15s;
+    width: 100%; font-family: inherit;
+  }
+  .action-btn:hover { background: var(--bg-secondary); }
+  .action-btn:active { transform: scale(0.97); }
+  .action-btn.primary { background: var(--bg-info); color: var(--text-info); border-color: var(--border-info); }
+  .action-btn.success { background: #E1F5EE; color: #085041; border-color: #0F6E56; }
+  .action-btn.boss { background: #FCEBEB; color: #791F1F; border-color: #A32D2D; }
+  .action-btn.school { background: #FEF1E0; color: #854F0B; border-color: #BA7517; }
+  .action-btn.danger {
+    background: #FCEBEB; color: #791F1F; border-color: #A32D2D;
+    padding: 6px 8px; font-size: 11px;
+  }
+  @media (prefers-color-scheme: dark) {
+    .action-btn.success { background: #04342C; color: #9FE1CB; border-color: #5DCAA5; }
+    .action-btn.boss { background: #501313; color: #F7C1C1; border-color: #F09595; }
+    .action-btn.school { background: #633806; color: #FAEEDA; border-color: #FAC775; }
+    .action-btn.danger { background: #501313; color: #F7C1C1; border-color: #F09595; }
+  }
+  .levelup-anim { animation: levelUp 0.6s ease; }
+  .hop-anim { animation: hop 1s ease infinite; }
+  input[type="number"], input[type="text"], textarea, select {
+    width: 100%; padding: 8px 10px; border-radius: var(--radius-md);
+    border: 0.5px solid var(--border-tertiary);
+    background: var(--bg-primary); color: var(--text-primary);
+    font-size: 14px; font-family: inherit;
+  }
+  textarea { resize: vertical; min-height: 60px; }
+  .quest-card {
+    background: var(--bg-primary); border: 0.5px solid var(--border-tertiary);
+    border-radius: var(--radius-lg); padding: 1rem; margin-bottom: 12px;
+  }
+  .cond-btn {
+    cursor: pointer; padding: 10px 6px; font-size: 12px; font-weight: 500;
+    border: 0.5px solid var(--border-tertiary);
+    background: var(--bg-primary); color: var(--text-secondary);
+    border-radius: var(--radius-md); transition: all 0.15s;
+    text-align: center; font-family: inherit;
+  }
+  .cond-btn:hover { background: var(--bg-secondary); }
+  .cond-btn.selected.cond-bad { background: #FCEBEB; border-color: #A32D2D; color: #791F1F; }
+  .cond-btn.selected.cond-low { background: #FAEEDA; border-color: #BA7517; color: #854F0B; }
+  .cond-btn.selected.cond-mid { background: #E6F1FB; border-color: #185FA5; color: #0C447C; }
+  .cond-btn.selected.cond-good { background: #E1F5EE; border-color: #0F6E56; color: #085041; }
+  @media (prefers-color-scheme: dark) {
+    .cond-btn.selected.cond-bad { background: #501313; border-color: #F09595; color: #F7C1C1; }
+    .cond-btn.selected.cond-low { background: #633806; border-color: #FAC775; color: #FAEEDA; }
+    .cond-btn.selected.cond-mid { background: #042C53; border-color: #85B7EB; color: #B5D4F4; }
+    .cond-btn.selected.cond-good { background: #04342C; border-color: #5DCAA5; color: #9FE1CB; }
+  }
+  .subject-item {
+    display: flex; gap: 6px; align-items: center;
+    padding: 8px; background: var(--bg-secondary); border-radius: var(--radius-md);
+    margin-bottom: 4px;
+  }
+  .subject-item input { flex: 1; padding: 6px 8px; font-size: 13px; }
+  .add-btn {
+    background: var(--bg-info); color: var(--text-info); border: 0.5px dashed var(--border-info);
+    cursor: pointer; padding: 8px; font-size: 12px; font-weight: 500;
+    border-radius: var(--radius-md); width: 100%; font-family: inherit;
+    margin-top: 4px;
+  }
+  .sr-only { position: absolute; left: -9999px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h2 class="sr-only">토끼 마법사 RPG · 학습 게임화 트래커</h2>
+
+<div id="char-header" style="text-align: center; margin-bottom: 1.25rem; padding: 1rem; border-radius: var(--radius-lg); transition: background 0.6s ease;">
+  <div id="char-avatar" style="margin: 0 auto 8px; width: 120px; height: 120px; display: flex; align-items: center; justify-content: center;"></div>
+  <p style="font-size: 16px; font-weight: 500;" id="char-title">아기 토끼 견습생</p>
+  <p style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;" id="char-subtitle">Lv. 1 · 토끼굴에서 첫 발걸음</p>
+  <div style="margin-top: 12px;">
+    <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+      <span style="color: var(--text-secondary);">🥕 XP</span>
+      <span style="color: var(--text-secondary);" id="xp-text">0 / 100</span>
+    </div>
+    <div style="background: var(--bg-tertiary); height: 8px; border-radius: 4px; overflow: hidden;">
+      <div id="xp-bar" style="background: var(--carrot); height: 100%; width: 0%; transition: width 0.5s ease;"></div>
+    </div>
+  </div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 1rem;">
+  <div class="stat-card">
+    <p style="font-size: 22px; font-weight: 500;" id="stat-streak">0</p>
+    <p style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">🌿 연속일</p>
+  </div>
+  <div class="stat-card">
+    <p style="font-size: 22px; font-weight: 500;" id="stat-days">74</p>
+    <p style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">⏳ D-day</p>
+  </div>
+  <div class="stat-card">
+    <p style="font-size: 22px; font-weight: 500;" id="stat-gold">0</p>
+    <p style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">🥕 당근</p>
+  </div>
+  <div class="stat-card">
+    <p style="font-size: 22px; font-weight: 500;" id="stat-bosses">0</p>
+    <p style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">⚔️ 보스 처치</p>
+  </div>
+</div>
+
+<div style="display: flex; gap: 4px; margin-bottom: 1rem; flex-wrap: wrap;">
+  <button class="tab-btn active" data-tab="today">오늘</button>
+  <button class="tab-btn" data-tab="skills">스킬</button>
+  <button class="tab-btn" data-tab="quests">퀘스트</button>
+  <button class="tab-btn" data-tab="rewards">보상</button>
+  <button class="tab-btn" data-tab="settings">설정</button>
+  <button class="tab-btn" data-tab="data">데이터</button>
+</div>
+
+<div id="panel-today" class="panel">
+  <div class="quest-card">
+    <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 6px;">💗 오늘 컨디션</p>
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-bottom: 12px;">
+      <button class="cond-btn cond-bad" data-cond="bad">😵 매우 안좋음<br><span style="font-size: 10px; opacity: 0.8;">×1.2 극복</span></button>
+      <button class="cond-btn cond-low" data-cond="low">😴 안좋음<br><span style="font-size: 10px; opacity: 0.8;">×1.1 극복</span></button>
+      <button class="cond-btn cond-mid" data-cond="mid">😐 보통<br><span style="font-size: 10px; opacity: 0.8;">×1.0 기본</span></button>
+      <button class="cond-btn cond-good" data-cond="good">💪 매우 좋음<br><span style="font-size: 10px; opacity: 0.8;">×1.0 기본</span></button>
+    </div>
+
+    <div style="display: grid; gap: 8px; margin-bottom: 12px;">
+      <div>
+        <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 2px;">⏱️ 공부 시간 (목표 <span id="hours-target-display">7</span>시간)</label>
+        <input type="number" id="input-hours" min="0" max="24" step="0.5" placeholder="예: 7">
+      </div>
+      <div>
+        <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 2px;">📝 푼 문제 수 (목표 <span id="problems-target-display">60</span>문제)</label>
+        <input type="number" id="input-problems" min="0" placeholder="예: 60">
+      </div>
+      <div>
+        <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 2px;">📚 주력 과목</label>
+        <select id="input-subject"></select>
+      </div>
+    </div>
+
+    <button class="action-btn primary" onclick="logToday()">🐇 오늘 공부 기록하기</button>
+  </div>
+
+  <div id="event-log" style="background: var(--bg-secondary); border-radius: var(--radius-md); padding: 12px; min-height: 60px;">
+    <p style="font-size: 12px; color: var(--text-secondary);">📖 모험 일지</p>
+    <div id="log-list" style="margin-top: 8px;"></div>
+  </div>
+</div>
+
+<div id="panel-skills" class="panel" style="display: none;">
+  <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">레벨업할 때마다 토끼 술법이 진화합니다 🥕✨</p>
+  <div id="skill-list"></div>
+</div>
+
+<div id="panel-quests" class="panel" style="display: none;">
+  <div class="quest-card">
+    <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+      <span style="font-size: 10px; padding: 2px 8px; border-radius: 3px; background: #1D9E75; color: white;">단기 (매일)</span>
+      <span style="font-size: 11px; color: var(--text-tertiary);" id="daily-clear-count">클리어 0회</span>
+    </div>
+    <textarea id="daily-quest-input" placeholder="오늘의 단기 목표를 입력하세요"></textarea>
+    <div style="display: flex; gap: 6px; margin-top: 8px;">
+      <button class="action-btn" onclick="saveQuest('daily')" style="flex: 1; padding: 8px; font-size: 12px;">💾 저장</button>
+      <button class="action-btn success" onclick="clearQuest('daily')" style="flex: 1; padding: 8px; font-size: 12px;">✅ 클리어!</button>
+    </div>
+  </div>
+
+  <div class="quest-card">
+    <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+      <span style="font-size: 10px; padding: 2px 8px; border-radius: 3px; background: #534AB7; color: white;">중기 (매주)</span>
+      <span style="font-size: 11px; color: var(--text-tertiary);" id="weekly-clear-count">클리어 0회</span>
+    </div>
+    <textarea id="weekly-quest-input" placeholder="이번 주 중기 목표를 입력하세요"></textarea>
+    <div style="display: flex; gap: 6px; margin-top: 8px;">
+      <button class="action-btn" onclick="saveQuest('weekly')" style="flex: 1; padding: 8px; font-size: 12px;">💾 저장</button>
+      <button class="action-btn success" onclick="clearQuest('weekly')" style="flex: 1; padding: 8px; font-size: 12px;">✅ 클리어!</button>
+    </div>
+  </div>
+
+  <div class="quest-card">
+    <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+      <span style="font-size: 10px; padding: 2px 8px; border-radius: 3px; background: #D85A30; color: white;">장기 (매월)</span>
+      <span style="font-size: 11px; color: var(--text-tertiary);" id="monthly-clear-count">클리어 0회</span>
+    </div>
+    <textarea id="monthly-quest-input" placeholder="이번 달 장기 목표를 입력하세요"></textarea>
+    <div style="display: flex; gap: 6px; margin-top: 8px;">
+      <button class="action-btn" onclick="saveQuest('monthly')" style="flex: 1; padding: 8px; font-size: 12px;">💾 저장</button>
+      <button class="action-btn success" onclick="clearQuest('monthly')" style="flex: 1; padding: 8px; font-size: 12px;">✅ 클리어!</button>
+    </div>
+  </div>
+
+  <div class="quest-card" style="background: #FCEBEB; border-color: #A32D2D;">
+    <div style="margin-bottom: 8px;">
+      <span style="font-size: 10px; padding: 2px 8px; border-radius: 3px; background: #A32D2D; color: white;">⚔️ 보스전 (모의고사)</span>
+    </div>
+    <p style="font-size: 12px; margin-bottom: 8px; color: #501313;" id="boss-threshold-display">목표 점수 이상 시 → 보스전 보상 획득! 🥕</p>
+
+    <div style="display: grid; gap: 8px; margin-bottom: 8px;">
+      <div>
+        <label style="font-size: 12px; color: #791F1F; display: block; margin-bottom: 2px;">📊 점수 (만점 <span id="boss-max-display">320</span>)</label>
+        <input type="number" id="boss-score" min="0" placeholder="예: 285">
+      </div>
+      <div>
+        <label style="font-size: 12px; color: #791F1F; display: block; margin-bottom: 2px;">📝 모의고사 이름 (선택)</label>
+        <input type="text" id="boss-name" placeholder="예: 1차 모의고사">
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+      <button class="action-btn boss" onclick="logBoss('self')" style="font-size: 12px;">🪞 셀프 모의고사</button>
+      <button class="action-btn school" onclick="logBoss('school')" style="font-size: 12px;">🏫 학교 모의고사</button>
+    </div>
+
+    <div id="boss-list" style="margin-top: 10px;"></div>
+  </div>
+
+  <div style="background: #FCEBEB; border: 0.5px solid #A32D2D; border-radius: var(--radius-lg); padding: 1rem; margin-bottom: 12px;">
+    <p style="font-size: 12px; color: #791F1F;">🐲 최종 보스 (실제 시험)</p>
+    <p style="font-size: 14px; font-weight: 500; color: #501313; margin-top: 4px;" id="final-target-display">목표: 280점 이상</p>
+    <p style="font-size: 11px; margin-top: 8px; color: #791F1F;" id="final-reward-display">최종 보상은 보상 탭에서 설정</p>
+
+    <div style="display: grid; gap: 8px; margin-top: 12px;">
+      <div>
+        <label style="font-size: 12px; color: #791F1F; display: block; margin-bottom: 2px;">🎯 실제 시험 점수</label>
+        <input type="number" id="final-score" min="0" placeholder="시험 후 입력">
+      </div>
+    </div>
+    <button class="action-btn boss" onclick="logFinal()" style="margin-top: 8px;">🐲 최종 점수 기록 (1회만)</button>
+    <p id="final-score-display" style="font-size: 12px; color: #501313; margin-top: 8px; text-align: center;"></p>
+  </div>
+</div>
+
+<div id="panel-rewards" class="panel" style="display: none;">
+  <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">퀘스트 클리어할 때마다 해당 단계 보상 중 택 1 🎁</p>
+
+  <div style="margin-bottom: 16px;">
+    <p style="font-size: 13px; font-weight: 500; margin-bottom: 6px; color: #1D9E75;">🟢 단기 보상</p>
+    <p style="font-size: 11px; color: var(--text-tertiary); margin-bottom: 6px;">미보상 클리어: <span id="pending-daily">0</span>회</p>
+    <textarea id="reward-daily-input" placeholder="단기 보상 옵션들 (택1, /로 구분)" style="margin-bottom: 6px;"></textarea>
+    <div style="display: flex; gap: 6px;">
+      <button class="action-btn" onclick="saveRewardOptions('daily')" style="flex: 1; padding: 6px; font-size: 11px;">💾 옵션 저장</button>
+      <button class="action-btn success" onclick="claimReward('daily')" style="flex: 1; padding: 6px; font-size: 11px;">🎁 보상 받기</button>
+    </div>
+  </div>
+
+  <div style="margin-bottom: 16px;">
+    <p style="font-size: 13px; font-weight: 500; margin-bottom: 6px; color: #534AB7;">🟣 중기 보상</p>
+    <p style="font-size: 11px; color: var(--text-tertiary); margin-bottom: 6px;">미보상 클리어: <span id="pending-weekly">0</span>회</p>
+    <textarea id="reward-weekly-input" placeholder="중기 보상 옵션들 (택1, /로 구분)" style="margin-bottom: 6px;"></textarea>
+    <div style="display: flex; gap: 6px;">
+      <button class="action-btn" onclick="saveRewardOptions('weekly')" style="flex: 1; padding: 6px; font-size: 11px;">💾 옵션 저장</button>
+      <button class="action-btn success" onclick="claimReward('weekly')" style="flex: 1; padding: 6px; font-size: 11px;">🎁 보상 받기</button>
+    </div>
+  </div>
+
+  <div style="margin-bottom: 16px;">
+    <p style="font-size: 13px; font-weight: 500; margin-bottom: 6px; color: #D85A30;">🟠 장기 보상</p>
+    <p style="font-size: 11px; color: var(--text-tertiary); margin-bottom: 6px;">미보상 클리어: <span id="pending-monthly">0</span>회</p>
+    <textarea id="reward-monthly-input" placeholder="장기 보상 옵션들 (택1, /로 구분)" style="margin-bottom: 6px;"></textarea>
+    <div style="display: flex; gap: 6px;">
+      <button class="action-btn" onclick="saveRewardOptions('monthly')" style="flex: 1; padding: 6px; font-size: 11px;">💾 옵션 저장</button>
+      <button class="action-btn success" onclick="claimReward('monthly')" style="flex: 1; padding: 6px; font-size: 11px;">🎁 보상 받기</button>
+    </div>
+  </div>
+
+  <div style="margin-bottom: 16px;">
+    <p style="font-size: 13px; font-weight: 500; margin-bottom: 6px; color: #BA7517;">🥕 보스전 보상 (모의고사 목표 점수+)</p>
+    <p style="font-size: 11px; color: var(--text-tertiary); margin-bottom: 6px;">미보상 처치: <span id="pending-boss">0</span>회</p>
+    <textarea id="reward-boss-input" placeholder="보스전 보상 (택1, /로 구분)" style="margin-bottom: 6px;"></textarea>
+    <div style="display: flex; gap: 6px;">
+      <button class="action-btn" onclick="saveRewardOptions('boss')" style="flex: 1; padding: 6px; font-size: 11px;">💾 옵션 저장</button>
+      <button class="action-btn success" onclick="claimReward('boss')" style="flex: 1; padding: 6px; font-size: 11px;">🎁 보상 받기</button>
+    </div>
+  </div>
+
+  <div style="margin-bottom: 16px;">
+    <p style="font-size: 13px; font-weight: 500; margin-bottom: 6px; color: #A32D2D;">🔴 최종 보상 (실제 시험 목표 점수+)</p>
+    <p style="font-size: 11px; color: var(--text-tertiary); margin-bottom: 6px;" id="final-status">🔒 잠김</p>
+    <textarea id="reward-final-input" placeholder="최종 보상" style="margin-bottom: 6px;"></textarea>
+    <div style="display: flex; gap: 6px;">
+      <button class="action-btn" onclick="saveRewardOptions('final')" style="flex: 1; padding: 6px; font-size: 11px;">💾 옵션 저장</button>
+      <button class="action-btn success" onclick="claimReward('final')" style="flex: 1; padding: 6px; font-size: 11px;" id="final-claim">🔒 잠김</button>
+    </div>
+  </div>
+
+  <div style="margin-top: 12px; padding: 12px; background: var(--bg-secondary); border-radius: var(--radius-md);">
+    <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 6px;">📜 보상 수령 기록</p>
+    <div id="claim-history"></div>
+  </div>
+</div>
+
+<div id="panel-settings" class="panel" style="display: none;">
+  <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">시험 일정과 과목, 점수 기준을 직접 설정하세요 ⚙️</p>
+
+  <div class="quest-card">
+    <p style="font-size: 13px; font-weight: 500; margin-bottom: 8px;">📅 시험 정보</p>
+    <div style="display: grid; gap: 8px;">
+      <div>
+        <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 2px;">실제 시험일 (D-day 기준)</label>
+        <input type="text" id="setting-exam-date" placeholder="YYYY-MM-DD">
+      </div>
+      <div>
+        <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 2px;">시험 이름</label>
+        <input type="text" id="setting-exam-name" placeholder="예: 의사국가고시">
+      </div>
+    </div>
+  </div>
+
+  <div class="quest-card">
+    <p style="font-size: 13px; font-weight: 500; margin-bottom: 8px;">🎯 일일 목표</p>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+      <div>
+        <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 2px;">목표 시간</label>
+        <input type="number" id="setting-hours-target" min="0" step="0.5">
+      </div>
+      <div>
+        <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 2px;">목표 문제 수</label>
+        <input type="number" id="setting-problems-target" min="0">
+      </div>
+    </div>
+  </div>
+
+  <div class="quest-card">
+    <p style="font-size: 13px; font-weight: 500; margin-bottom: 8px;">📊 점수 체계</p>
+    <div style="display: grid; gap: 8px;">
+      <div>
+        <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 2px;">만점</label>
+        <input type="number" id="setting-max-score" min="0">
+      </div>
+      <div>
+        <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 2px;">보스 처치 (보상) 기준 점수</label>
+        <input type="number" id="setting-boss-threshold" min="0">
+      </div>
+      <div>
+        <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 2px;">중간 처치 기준 점수</label>
+        <input type="number" id="setting-mid-threshold" min="0">
+      </div>
+    </div>
+  </div>
+
+  <div class="quest-card">
+    <p style="font-size: 13px; font-weight: 500; margin-bottom: 8px;">📚 과목 목록</p>
+    <p style="font-size: 11px; color: var(--text-tertiary); margin-bottom: 8px;">과목명을 자유롭게 추가/수정/삭제하세요. 변경하면 진행 중인 데이터는 유지됩니다.</p>
+    <div id="subjects-editor"></div>
+    <button class="add-btn" onclick="addSubject()">+ 과목 추가</button>
+  </div>
+
+  <button class="action-btn primary" onclick="saveSettings()" style="margin-bottom: 12px;">💾 설정 저장</button>
+
+  <div class="quest-card">
+    <p style="font-size: 13px; font-weight: 500; margin-bottom: 8px;">🐰 캐릭터 정보</p>
+    <p style="font-size: 12px; color: var(--text-secondary);">현재 캐릭터: <span id="character-info-display">새끼 토끼 견습생 (Lv.1)</span></p>
+    <p style="font-size: 11px; color: var(--text-tertiary); margin-top: 6px;">레벨에 따라 토끼 마법사가 진화합니다 — Lv.1 아기 토끼 견습생 → Lv.40 위대한 토끼 신</p>
+  </div>
+</div>
+
+<div id="panel-data" class="panel" style="display: none;">
+  <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">데이터 백업 및 분석을 위한 내보내기 📊</p>
+
+  <div class="quest-card">
+    <p style="font-size: 13px; font-weight: 500; margin-bottom: 8px;">📤 CSV 내보내기 (엑셀에서 열기)</p>
+    <p style="font-size: 11px; color: var(--text-tertiary); margin-bottom: 10px;">엑셀이나 구글 시트에서 바로 열 수 있어요.</p>
+
+    <div style="display: grid; gap: 6px;">
+      <button class="action-btn" onclick="exportCSV('study')" style="font-size: 12px;">📚 공부 기록 CSV</button>
+      <button class="action-btn" onclick="exportCSV('boss')" style="font-size: 12px;">⚔️ 모의고사 CSV</button>
+      <button class="action-btn" onclick="exportCSV('quest')" style="font-size: 12px;">📜 퀘스트 클리어 CSV</button>
+      <button class="action-btn" onclick="exportCSV('reward')" style="font-size: 12px;">🎁 보상 수령 CSV</button>
+      <button class="action-btn" onclick="exportCSV('skill')" style="font-size: 12px;">✨ 스킬 레벨 현황 CSV</button>
+      <button class="action-btn primary" onclick="exportCSV('all')" style="font-size: 12px;">📦 전체 묶음 다운로드</button>
+    </div>
+  </div>
+
+  <div class="quest-card">
+    <p style="font-size: 13px; font-weight: 500; margin-bottom: 8px;">💾 백업 / 복원 (JSON)</p>
+    <p style="font-size: 11px; color: var(--text-tertiary); margin-bottom: 10px;">기기/브라우저 변경 시 사용. 1주일에 한 번 백업 추천!</p>
+
+    <div style="display: grid; gap: 6px;">
+      <button class="action-btn" onclick="exportJSON()" style="font-size: 12px;">⬇️ 전체 데이터 백업 (JSON)</button>
+      <label class="action-btn" style="font-size: 12px; display: block; text-align: center; cursor: pointer;">
+        ⬆️ JSON 파일에서 복원하기
+        <input type="file" accept=".json" onchange="importJSON(event)" style="display: none;">
+      </label>
+    </div>
+  </div>
+
+  <div class="quest-card">
+    <p style="font-size: 13px; font-weight: 500; margin-bottom: 8px;">📈 누적 통계</p>
+    <div id="stats-summary" style="font-size: 12px; color: var(--text-secondary); line-height: 1.7;"></div>
+  </div>
+
+  <div style="padding: 12px; background: var(--bg-secondary); border-radius: var(--radius-md);">
+    <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 6px;">⚙️ 데이터 관리</p>
+    <button class="action-btn" onclick="resetGame()" style="background: transparent; font-size: 12px;">처음부터 다시 시작</button>
+  </div>
+</div>
+
+</div>
+
+<script>
+const STORAGE_KEY = 'rabbit_mage_rpg_v1';
+
+function rabbitSVG(opts) {
+  const body = opts.body || '#FFFFFF';
+  const bodyStroke = opts.bodyStroke || '#3A3934';
+  const earInner = opts.earInner || '#FFC9DC';
+  const eye = opts.eye || '#1A1915';
+  const cheek = opts.cheek || '#FFB3C8';
+  const accessory = opts.accessory || '';
+  const aura = opts.aura || '';
+  return `<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" style="display: block; max-width: 100%; height: auto;">
+    ${aura}
+    <ellipse cx="60" cy="92" rx="22" ry="14" fill="${body}" stroke="${bodyStroke}" stroke-width="1.5"/>
+    <circle cx="60" cy="68" r="32" fill="${body}" stroke="${bodyStroke}" stroke-width="1.5"/>
+    <path d="M 38 50 Q 32 18 42 14 Q 50 18 48 52 Z" fill="${body}" stroke="${bodyStroke}" stroke-width="1.5"/>
+    <path d="M 82 50 Q 88 18 78 14 Q 70 18 72 52 Z" fill="${body}" stroke="${bodyStroke}" stroke-width="1.5"/>
+    <path d="M 41 48 Q 38 24 43 20 Q 47 24 46 50 Z" fill="${earInner}"/>
+    <path d="M 79 48 Q 82 24 77 20 Q 73 24 74 50 Z" fill="${earInner}"/>
+    <ellipse cx="48" cy="68" rx="4.5" ry="5.5" fill="${eye}"/>
+    <ellipse cx="72" cy="68" rx="4.5" ry="5.5" fill="${eye}"/>
+    <ellipse cx="46.5" cy="65.5" rx="1.5" ry="2" fill="white"/>
+    <ellipse cx="70.5" cy="65.5" rx="1.5" ry="2" fill="white"/>
+    <ellipse cx="49.5" cy="70" rx="0.6" ry="0.8" fill="white"/>
+    <ellipse cx="73.5" cy="70" rx="0.6" ry="0.8" fill="white"/>
+    <ellipse cx="38" cy="78" rx="5" ry="3" fill="${cheek}" opacity="0.75"/>
+    <ellipse cx="82" cy="78" rx="5" ry="3" fill="${cheek}" opacity="0.75"/>
+    <ellipse cx="60" cy="78" rx="1.8" ry="1.2" fill="#FF8FA8"/>
+    <path d="M 56 81 Q 60 85 64 81" fill="none" stroke="${bodyStroke}" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+    ${accessory}
+  </svg>`;
+}
+
+const TIERS = [
+  {
+    lv: 1,
+    title: '아기 토끼 견습생',
+    bgColor: '#F5F1E8',
+    bgColorDark: '#2A2620',
+    svg: rabbitSVG({
+      body: '#FAFAF7',
+      earInner: '#FCE9F1',
+      cheek: '#FFB3C8'
+    })
+  },
+  {
+    lv: 5,
+    title: '풀밭의 어린 토끼',
+    bgColor: '#E8F2D8',
+    bgColorDark: '#1F2A18',
+    svg: rabbitSVG({
+      body: '#FAFAF7',
+      earInner: '#FCE9F1',
+      cheek: '#FFB3C8',
+      accessory: '<path d="M 48 22 Q 50 14 53 19 Q 51 23 48 22 Z" fill="#639922"/><path d="M 70 19 Q 73 12 75 18 Q 73 22 70 19 Z" fill="#639922"/>'
+    })
+  },
+  {
+    lv: 10,
+    title: '당근 수련 토끼',
+    bgColor: '#FCE6D0',
+    bgColorDark: '#3A2614',
+    svg: rabbitSVG({
+      body: '#FAFAF7',
+      earInner: '#FCE9F1',
+      cheek: '#FFB3C8',
+      accessory: '<path d="M 92 75 L 102 90 L 95 96 L 86 82 Z" fill="#EF7A1F" stroke="#C25A0F" stroke-width="1"/><path d="M 92 75 Q 90 70 94 68 Q 98 70 102 73 Q 100 78 92 75 Z" fill="#639922"/>'
+    })
+  },
+  {
+    lv: 15,
+    title: '달밤의 토끼 마법사',
+    bgColor: '#D8DCF0',
+    bgColorDark: '#1C1F38',
+    svg: rabbitSVG({
+      body: '#E8E5F5',
+      earInner: '#C9C2EE',
+      cheek: '#B5A8E8',
+      bodyStroke: '#3A3060',
+      accessory: '<path d="M 36 14 L 84 14 L 72 40 L 48 40 Z" fill="#534AB7" stroke="#2D2670" stroke-width="1.2"/><path d="M 34 40 L 86 40 L 84 44 L 36 44 Z" fill="#534AB7" stroke="#2D2670" stroke-width="1.2"/><circle cx="60" cy="24" r="2" fill="#FAC775"/><circle cx="54" cy="30" r="1" fill="#FAC775"/><circle cx="68" cy="32" r="1.2" fill="#FAC775"/>'
+    })
+  },
+  {
+    lv: 20,
+    title: '환상의 토끼술사',
+    bgColor: '#E5DCEE',
+    bgColorDark: '#2D2240',
+    svg: rabbitSVG({
+      body: '#F0E6FA',
+      earInner: '#D8B8F5',
+      cheek: '#C9A8E8',
+      bodyStroke: '#5A3A8A',
+      aura: '<circle cx="60" cy="65" r="55" fill="none" stroke="#B594E5" stroke-width="0.8" opacity="0.4" stroke-dasharray="2 3"/>',
+      accessory: '<path d="M 18 55 Q 14 50 16 45 L 22 50 Z" fill="#FAC775" stroke="#B57A0F" stroke-width="0.8"/><path d="M 16 47 L 20 51" stroke="#FAC775" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="44" r="2" fill="#FAC775"/><circle cx="100" cy="35" r="1.5" fill="#FAC775" opacity="0.8"/><circle cx="105" cy="55" r="1" fill="#FAC775" opacity="0.6"/><circle cx="20" cy="80" r="1" fill="#FAC775" opacity="0.6"/>'
+    })
+  },
+  {
+    lv: 25,
+    title: '별빛 토끼 현자',
+    bgColor: '#E8E0F2',
+    bgColorDark: '#1F1A35',
+    svg: rabbitSVG({
+      body: '#F5EFFA',
+      earInner: '#E8C9F0',
+      cheek: '#D5A8E0',
+      bodyStroke: '#3D2860',
+      aura: '<circle cx="60" cy="65" r="55" fill="none" stroke="#FAC775" stroke-width="0.8" opacity="0.5"/><circle cx="60" cy="65" r="50" fill="none" stroke="#B594E5" stroke-width="0.5" opacity="0.4" stroke-dasharray="3 4"/>',
+      accessory: '<path d="M 28 12 L 30 16 L 34 16 L 31 19 L 32 24 L 28 21 L 24 24 L 25 19 L 22 16 L 26 16 Z" fill="#FAC775" stroke="#B57A0F" stroke-width="0.6"/><path d="M 92 10 L 93 13 L 96 13 L 94 15 L 95 18 L 92 16 L 89 18 L 90 15 L 88 13 L 91 13 Z" fill="#FAC775" stroke="#B57A0F" stroke-width="0.6"/><circle cx="105" cy="40" r="1.5" fill="#FAC775"/><circle cx="15" cy="50" r="1" fill="#FAC775"/><circle cx="100" cy="80" r="1.2" fill="#FAC775"/>'
+    })
+  },
+  {
+    lv: 30,
+    title: '천공의 토끼 대마법사',
+    bgColor: '#D5E5F5',
+    bgColorDark: '#152538',
+    svg: rabbitSVG({
+      body: '#FAFAFA',
+      earInner: '#E5EEFA',
+      cheek: '#B8D5EE',
+      bodyStroke: '#1A4070',
+      aura: '<ellipse cx="40" cy="55" rx="12" ry="6" fill="#E5EEFA" opacity="0.7"/><ellipse cx="85" cy="50" rx="14" ry="7" fill="#E5EEFA" opacity="0.7"/><ellipse cx="60" cy="115" rx="40" ry="5" fill="#E5EEFA" opacity="0.5"/>',
+      accessory: '<path d="M 26 8 L 94 8 L 80 36 L 40 36 Z" fill="#1A4070" stroke="#0A2548" stroke-width="1.5"/><path d="M 24 36 L 96 36 L 92 42 L 28 42 Z" fill="#1A4070" stroke="#0A2548" stroke-width="1.5"/><circle cx="60" cy="18" r="3" fill="#FAC775"/><circle cx="46" cy="24" r="1.5" fill="#FAC775"/><circle cx="74" cy="24" r="1.5" fill="#FAC775"/><circle cx="60" cy="28" r="1" fill="#FAC775"/><path d="M 12 60 Q 8 55 12 50 L 18 55 Z" fill="#FAC775" stroke="#B57A0F" stroke-width="0.8"/><path d="M 10 52 L 16 58" stroke="#FAC775" stroke-width="2.5" stroke-linecap="round"/>'
+    })
+  },
+  {
+    lv: 40,
+    title: '위대한 토끼 신',
+    bgColor: '#FAEED5',
+    bgColorDark: '#3D2A0A',
+    svg: rabbitSVG({
+      body: '#FFFCF0',
+      earInner: '#FFE5A8',
+      cheek: '#FFB3C8',
+      bodyStroke: '#8A6010',
+      aura: '<circle cx="60" cy="65" r="58" fill="none" stroke="#FAC775" stroke-width="2" opacity="0.6"/><circle cx="60" cy="65" r="52" fill="none" stroke="#FAC775" stroke-width="1" opacity="0.5"/><circle cx="60" cy="65" r="46" fill="none" stroke="#FFE5A8" stroke-width="0.8" opacity="0.5" stroke-dasharray="2 3"/>',
+      accessory: '<path d="M 34 12 L 48 26 L 60 8 L 72 26 L 86 12 L 84 36 L 36 36 Z" fill="#E5A82A" stroke="#8A6010" stroke-width="1.5"/><circle cx="60" cy="18" r="3.5" fill="#E24B4A" stroke="#8A6010" stroke-width="0.8"/><circle cx="44" cy="25" r="2" fill="#185FA5" stroke="#8A6010" stroke-width="0.6"/><circle cx="76" cy="25" r="2" fill="#185FA5" stroke="#8A6010" stroke-width="0.6"/><circle cx="38" cy="31" r="1.5" fill="#FFFCF0"/><circle cx="82" cy="31" r="1.5" fill="#FFFCF0"/><circle cx="100" cy="40" r="1.5" fill="#FAC775"/><circle cx="20" cy="45" r="1.2" fill="#FAC775"/><circle cx="105" cy="80" r="1.5" fill="#FAC775"/><circle cx="15" cy="85" r="1" fill="#FAC775"/>'
+    })
+  },
+];
+
+function defaultDate(daysFromToday) {
+  const d = new Date();
+  d.setDate(d.getDate() + daysFromToday);
+  return d.toISOString().slice(0, 10);
+}
+
+const DEFAULT_SETTINGS = {
+  examDate: defaultDate(74),
+  examName: '최종 시험',
+  hoursTarget: 7,
+  problemsTarget: 60,
+  maxScore: 320,
+  bossThreshold: 280,
+  midThreshold: 240,
+};
+
+const RABBIT_SKILL_NAMES = [
+  '깡총깡총 작은 도약',
+  '풀잎 사이의 가벼운 발걸음',
+  '당근밭을 다스리는 손길',
+  '달빛을 모으는 토끼 주문',
+  '구름 위를 뛰노는 마법',
+  '별빛 당근의 신성한 가호',
+  '시간과 공간을 넘는 토끼술',
+];
+
+function generateRabbitSkill(subjectName, level) {
+  const idx = Math.min(Math.floor((level - 1) / 2), RABBIT_SKILL_NAMES.length - 1);
+  return RABBIT_SKILL_NAMES[idx];
+}
+
+const COND_MULT = { bad: 1.2, low: 1.1, mid: 1.0, good: 1.0 };
+const COND_LABEL = { bad: '😵 매우 안좋음', low: '😴 안좋음', mid: '😐 보통', good: '💪 매우 좋음' };
+const QUEST_XP = { daily: 50, weekly: 200, monthly: 800 };
+const QUEST_GOLD = { daily: 30, weekly: 150, monthly: 500 };
+const QUEST_LABEL = { daily: '단기', weekly: '중기', monthly: '장기' };
+const BOSS_LABEL = { self: '🪞 셀프', school: '🏫 학교' };
+
+let state = {
+  level: 1, xp: 0, totalXp: 0, streak: 0, lastLogDate: null,
+  gold: 0, bossesDefeated: 0,
+  subjects: [
+    { id: 'subj1', name: '과목 1', icon: '🥕', color: '#EF7A1F' },
+    { id: 'subj2', name: '과목 2', icon: '🌿', color: '#639922' },
+    { id: 'subj3', name: '과목 3', icon: '🌸', color: '#ED93B1' },
+  ],
+  skills: {}, skillXp: {},
+  log: [], bosses: [], studyHistory: [], questHistory: [],
+  selectedCondition: 'mid',
+  questText: { daily: '', weekly: '', monthly: '' },
+  questCleared: { daily: 0, weekly: 0, monthly: 0 },
+  rewardOptions: { daily: '', weekly: '', monthly: '', boss: '', final: '' },
+  pending: { daily: 0, weekly: 0, monthly: 0, boss: 0 },
+  finalClaimed: false, finalScore: null,
+  claimHistory: [],
+  settings: { ...DEFAULT_SETTINGS },
+};
+
+function ensureSkillSlots() {
+  state.subjects.forEach(s => {
+    if (!(s.id in state.skills)) state.skills[s.id] = 1;
+    if (!(s.id in state.skillXp)) state.skillXp[s.id] = 0;
+  });
+}
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      state = { ...state, ...parsed };
+      state.settings = { ...DEFAULT_SETTINGS, ...(parsed.settings || {}) };
+      state.questText = { ...{ daily: '', weekly: '', monthly: '' }, ...(parsed.questText || {}) };
+      state.questCleared = { ...{ daily: 0, weekly: 0, monthly: 0 }, ...(parsed.questCleared || {}) };
+      state.pending = { ...{ daily: 0, weekly: 0, monthly: 0, boss: 0 }, ...(parsed.pending || {}) };
+      state.rewardOptions = { ...{ daily: '', weekly: '', monthly: '', boss: '', final: '' }, ...(parsed.rewardOptions || {}) };
+      state.studyHistory = parsed.studyHistory || [];
+      state.questHistory = parsed.questHistory || [];
+      state.subjects = parsed.subjects || state.subjects;
+      state.skills = parsed.skills || {};
+      state.skillXp = parsed.skillXp || {};
+    }
+    ensureSkillSlots();
+  } catch (e) { console.error(e); }
+}
+
+function saveState() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {} }
+
+function getTier() {
+  let tier = TIERS[0];
+  for (const t of TIERS) if (state.level >= t.lv) tier = t;
+  return tier;
+}
+
+function xpForNextLevel() { return 100 + (state.level - 1) * 50; }
+
+function calcDday() {
+  const exam = new Date(state.settings.examDate);
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const diff = Math.ceil((exam - today) / (1000 * 60 * 60 * 24));
+  return Math.max(0, diff);
+}
+
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+
+function addLog(text) {
+  state.log.unshift({ date: todayStr(), text });
+  if (state.log.length > 12) state.log.pop();
+}
+
+function selectCondition(cond) {
+  state.selectedCondition = cond;
+  document.querySelectorAll('.cond-btn').forEach(b => {
+    b.classList.toggle('selected', b.dataset.cond === cond);
+  });
+  saveState();
+}
+
+function processLevelUp(eventMsg) {
+  let leveledUp = false;
+  while (state.xp >= xpForNextLevel()) {
+    state.xp -= xpForNextLevel();
+    state.level += 1;
+    leveledUp = true;
+    eventMsg.value += ` 🎉 레벨업! Lv.${state.level}`;
+    state.gold += 100;
+  }
+  return leveledUp;
+}
+
+function logToday() {
+  const hours = parseFloat(document.getElementById('input-hours').value) || 0;
+  const problems = parseInt(document.getElementById('input-problems').value) || 0;
+  const subjectId = document.getElementById('input-subject').value;
+  const subject = state.subjects.find(s => s.id === subjectId);
+  if (!subject) { alert('과목을 선택해주세요'); return; }
+  const cond = state.selectedCondition;
+  const mult = COND_MULT[cond];
+
+  if (hours === 0 && problems === 0) { alert('공부 시간이나 문제 수를 입력해주세요!'); return; }
+
+  let baseXp = hours * 10 + problems * 0.5;
+  let xpGain = Math.round(baseXp * mult);
+  let goldGain = Math.round(hours * 5 + problems * 0.3);
+  let eventMsg = { value: '' };
+
+  if (mult > 1.0) {
+    const bonus = Math.round(baseXp * (mult - 1));
+    eventMsg.value += ` 💎 ${COND_LABEL[cond]} 극복 +${bonus} XP (×${mult})`;
+  }
+
+  const today = todayStr();
+  if (state.lastLogDate === today) {
+    addLog('⚠️ 오늘은 이미 기록했어요. 추가 기록만 반영됩니다.');
+  } else {
+    if (state.lastLogDate) {
+      const last = new Date(state.lastLogDate);
+      const now = new Date(today);
+      const dayDiff = Math.round((now - last) / (1000 * 60 * 60 * 24));
+      state.streak = dayDiff === 1 ? state.streak + 1 : 1;
+    } else { state.streak = 1; }
+    state.lastLogDate = today;
+  }
+
+  if (state.streak >= 3) {
+    const bonus = Math.round(xpGain * 0.2);
+    xpGain += bonus;
+    eventMsg.value += ` 🌿 ${state.streak}일 콤보 +${bonus} XP`;
+  }
+
+  if (hours >= state.settings.hoursTarget && problems >= state.settings.problemsTarget) {
+    xpGain += 30;
+    goldGain += 20;
+    eventMsg.value += ' ✅ 일일 목표 완수 +30 XP';
+  }
+
+  state.xp += xpGain;
+  state.totalXp += xpGain;
+  state.gold += goldGain;
+  state.skillXp[subjectId] = (state.skillXp[subjectId] || 0) + xpGain;
+
+  while (state.skillXp[subjectId] >= state.skills[subjectId] * 50) {
+    state.skillXp[subjectId] -= state.skills[subjectId] * 50;
+    state.skills[subjectId] += 1;
+    const newName = generateRabbitSkill(subject.name, state.skills[subjectId]);
+    eventMsg.value += ` 📈 ${subject.name} Lv.${state.skills[subjectId]} → "${newName}"`;
+  }
+
+  const leveledUp = processLevelUp(eventMsg);
+
+  state.studyHistory.unshift({
+    date: today, hours, problems, subject: subject.name,
+    condition: COND_LABEL[cond], xpGained: xpGain, goldGained: goldGain
+  });
+  if (state.studyHistory.length > 500) state.studyHistory.pop();
+
+  addLog(`${subject.icon} ${subject.name} ${hours}h ${problems}문제 → +${xpGain} XP${eventMsg.value}`);
+
+  document.getElementById('input-hours').value = '';
+  document.getElementById('input-problems').value = '';
+
+  if (leveledUp) {
+    document.getElementById('char-avatar').classList.add('levelup-anim');
+    setTimeout(() => document.getElementById('char-avatar').classList.remove('levelup-anim'), 600);
+  }
+
+  saveState();
+  render();
+}
+
+function saveQuest(tier) {
+  state.questText[tier] = document.getElementById(`${tier}-quest-input`).value.trim();
+  saveState();
+  addLog(`📜 ${QUEST_LABEL[tier]} 퀘스트 갱신`);
+  render();
+}
+
+function clearQuest(tier) {
+  const text = document.getElementById(`${tier}-quest-input`).value.trim();
+  if (!text) { alert('먼저 퀘스트 내용을 입력해주세요!'); return; }
+
+  state.questText[tier] = text;
+  state.questCleared[tier] += 1;
+  state.pending[tier] += 1;
+
+  const xpGain = QUEST_XP[tier];
+  const goldGain = QUEST_GOLD[tier];
+  state.xp += xpGain;
+  state.totalXp += xpGain;
+  state.gold += goldGain;
+
+  state.questHistory.unshift({
+    date: todayStr(), tier: QUEST_LABEL[tier], content: text, xpGained: xpGain, goldGained: goldGain
+  });
+  if (state.questHistory.length > 200) state.questHistory.pop();
+
+  let eventMsg = { value: ` +${xpGain} XP, +${goldGain} 당근` };
+  processLevelUp(eventMsg);
+
+  const emoji = tier === 'daily' ? '📜' : tier === 'weekly' ? '🗡️' : '🏰';
+  addLog(`${emoji} ${QUEST_LABEL[tier]} 퀘스트 클리어!${eventMsg.value} — 보상 받으세요!`);
+
+  saveState();
+  render();
+}
+
+function saveRewardOptions(tier) {
+  state.rewardOptions[tier] = document.getElementById(`reward-${tier}-input`).value.trim();
+  saveState();
+  const label = tier === 'final' ? '최종' : tier === 'boss' ? '보스전' : QUEST_LABEL[tier];
+  addLog(`🎁 ${label} 보상 옵션 갱신`);
+  render();
+}
+
+function claimReward(tier) {
+  if (tier === 'final') {
+    if (!state.finalScore || state.finalScore < state.settings.bossThreshold) { alert('아직 잠겨있어요! 실제 시험에서 목표 점수 이상 받으면 해제됩니다.'); return; }
+    if (state.finalClaimed) { alert('이미 수령했어요!'); return; }
+    state.finalClaimed = true;
+    state.claimHistory.unshift({ date: todayStr(), tier: '최종', reward: state.rewardOptions.final });
+    addLog(`✈️ 최종 보상 수령! ${state.rewardOptions.final}`);
+  } else {
+    if (state.pending[tier] <= 0) {
+      const lab = tier === 'boss' ? '모의고사 보스전' : `${QUEST_LABEL[tier]} 퀘스트`;
+      alert(`먼저 ${lab}을 클리어하세요!`); return;
+    }
+    state.pending[tier] -= 1;
+    const lab = tier === 'boss' ? '보스전' : QUEST_LABEL[tier];
+    state.claimHistory.unshift({ date: todayStr(), tier: lab, reward: state.rewardOptions[tier] });
+    addLog(`🎁 ${lab} 보상 수령 (택1: ${state.rewardOptions[tier]})`);
+  }
+  if (state.claimHistory.length > 30) state.claimHistory.pop();
+  saveState();
+  render();
+}
+
+function logBoss(type) {
+  const scoreInput = document.getElementById('boss-score').value;
+  const name = document.getElementById('boss-name').value.trim() || (type === 'self' ? '셀프 모의고사' : '학교 모의고사');
+  const s = parseInt(scoreInput);
+  const max = state.settings.maxScore;
+  if (!scoreInput || isNaN(s) || s < 0 || s > max) { alert(`0~${max} 사이의 점수를 입력해주세요`); return; }
+
+  state.bosses.unshift({ date: todayStr(), score: s, name, type });
+  state.bossesDefeated += 1;
+
+  let bonus = 100;
+  let log = `🗡️ ${BOSS_LABEL[type]} ${name} 도전! ${s}점`;
+  if (s >= state.settings.bossThreshold) {
+    bonus = 500;
+    state.pending.boss += 1;
+    log = `🐲 ${BOSS_LABEL[type]} ${name} 보스 처치! ${s}점 — 목표 돌파! +500 XP, 보상 획득!`;
+  } else if (s >= state.settings.midThreshold) {
+    bonus = 300;
+    log = `⚔️ ${BOSS_LABEL[type]} ${name} 보스 처치! ${s}점 — 좋은 점수! +300 XP`;
+  } else {
+    log += ` — 다음엔 더 강하게! +100 XP`;
+  }
+  addLog(log);
+  state.xp += bonus;
+  state.totalXp += bonus;
+  state.gold += 200;
+
+  let eventMsg = { value: '' };
+  processLevelUp(eventMsg);
+  if (eventMsg.value) addLog(eventMsg.value);
+
+  document.getElementById('boss-score').value = '';
+  document.getElementById('boss-name').value = '';
+  saveState();
+  render();
+}
+
+function logFinal() {
+  const scoreInput = document.getElementById('final-score').value;
+  const s = parseInt(scoreInput);
+  const max = state.settings.maxScore;
+  if (!scoreInput || isNaN(s) || s < 0 || s > max) { alert(`0~${max} 사이의 점수를 입력해주세요`); return; }
+  if (state.finalScore !== null) {
+    if (!confirm(`이미 시험 점수(${state.finalScore}점)가 기록되어 있어요. 덮어쓸까요?`)) return;
+  }
+  state.finalScore = s;
+  if (s >= state.settings.bossThreshold) {
+    addLog(`🐲🎊 ${state.settings.examName} 합격! ${s}점 — 최종 보스 격파! 보상 잠금 해제!`);
+  } else {
+    addLog(`🐲 ${state.settings.examName} 점수 기록: ${s}점 — 수고 많으셨어요!`);
+  }
+  saveState();
+  render();
+}
+
+function addSubject() {
+  const id = 'subj_' + Date.now();
+  state.subjects.push({ id, name: '새 과목', icon: '✨', color: '#7F77DD' });
+  state.skills[id] = 1;
+  state.skillXp[id] = 0;
+  saveState();
+  renderSubjectsEditor();
+}
+
+function deleteSubject(id) {
+  if (state.subjects.length <= 1) { alert('과목은 최소 1개 이상이어야 해요'); return; }
+  if (!confirm('이 과목을 삭제할까요? 해당 과목의 진행도도 함께 삭제됩니다.')) return;
+  state.subjects = state.subjects.filter(s => s.id !== id);
+  delete state.skills[id];
+  delete state.skillXp[id];
+  saveState();
+  render();
+}
+
+function updateSubjectField(id, field, value) {
+  const subj = state.subjects.find(s => s.id === id);
+  if (subj) {
+    subj[field] = value;
+    saveState();
+  }
+}
+
+function renderSubjectsEditor() {
+  const container = document.getElementById('subjects-editor');
+  if (!container) return;
+  container.innerHTML = state.subjects.map(s => `
+    <div class="subject-item">
+      <input type="text" value="${s.icon || ''}" maxlength="2" style="flex: 0 0 50px; text-align: center;" oninput="updateSubjectField('${s.id}', 'icon', this.value)" placeholder="🥕">
+      <input type="text" value="${s.name.replace(/"/g, '&quot;')}" oninput="updateSubjectField('${s.id}', 'name', this.value)" placeholder="과목명">
+      <button class="action-btn danger" onclick="deleteSubject('${s.id}')" style="flex: 0 0 auto;">삭제</button>
+    </div>
+  `).join('');
+}
+
+function saveSettings() {
+  const examDate = document.getElementById('setting-exam-date').value;
+  const examName = document.getElementById('setting-exam-name').value;
+  const hoursTarget = parseFloat(document.getElementById('setting-hours-target').value) || 0;
+  const problemsTarget = parseInt(document.getElementById('setting-problems-target').value) || 0;
+  const maxScore = parseInt(document.getElementById('setting-max-score').value) || 320;
+  const bossThreshold = parseInt(document.getElementById('setting-boss-threshold').value) || 0;
+  const midThreshold = parseInt(document.getElementById('setting-mid-threshold').value) || 0;
+
+  state.settings = { examDate, examName, hoursTarget, problemsTarget, maxScore, bossThreshold, midThreshold };
+  ensureSkillSlots();
+  saveState();
+  addLog('⚙️ 설정 저장 완료');
+  alert('설정이 저장되었어요!');
+  render();
+}
+
+function resetGame() {
+  if (!confirm('정말로 처음부터 다시 시작할까요? 모든 진행도가 사라집니다.')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  location.reload();
+}
+
+function csvEscape(v) {
+  if (v === null || v === undefined) return '';
+  const s = String(v);
+  if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+  return s;
+}
+
+function downloadCSV(filename, rows) {
+  const csv = '\uFEFF' + rows.map(r => r.map(csvEscape).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 100);
+}
+
+function exportCSV(type) {
+  const today = todayStr();
+  if (type === 'study' || type === 'all') {
+    const rows = [['날짜', '공부시간(h)', '푼문제수', '주력과목', '컨디션', '획득XP', '획득당근']];
+    state.studyHistory.forEach(h => {
+      rows.push([h.date, h.hours, h.problems, h.subject, h.condition, h.xpGained, h.goldGained]);
+    });
+    downloadCSV(`토끼RPG_공부기록_${today}.csv`, rows);
+  }
+  if (type === 'boss' || type === 'all') {
+    const rows = [['날짜', '구분', '시험명', '점수', '결과']];
+    state.bosses.forEach(b => {
+      const result = b.score >= state.settings.bossThreshold ? '보스처치 (보상)' : b.score >= state.settings.midThreshold ? '보스처치' : '도전';
+      rows.push([b.date, b.type === 'self' ? '셀프' : '학교', b.name, b.score, result]);
+    });
+    if (state.finalScore !== null) {
+      const result = state.finalScore >= state.settings.bossThreshold ? '최종보스 격파' : '최종보스 도전';
+      rows.push(['실제시험', state.settings.examName || '실제 시험', state.settings.examName || '시험', state.finalScore, result]);
+    }
+    downloadCSV(`토끼RPG_모의고사_${today}.csv`, rows);
+  }
+  if (type === 'quest' || type === 'all') {
+    const rows = [['날짜', '단계', '내용', '획득XP', '획득당근']];
+    state.questHistory.forEach(q => {
+      rows.push([q.date, q.tier, q.content, q.xpGained, q.goldGained]);
+    });
+    downloadCSV(`토끼RPG_퀘스트_${today}.csv`, rows);
+  }
+  if (type === 'reward' || type === 'all') {
+    const rows = [['날짜', '단계', '보상내용']];
+    state.claimHistory.forEach(c => {
+      rows.push([c.date, c.tier, c.reward]);
+    });
+    downloadCSV(`토끼RPG_보상_${today}.csv`, rows);
+  }
+  if (type === 'skill' || type === 'all') {
+    const rows = [['과목', '레벨', '현재XP', '다음레벨XP', '스킬명']];
+    state.subjects.forEach(s => {
+      const lv = state.skills[s.id] || 1;
+      rows.push([s.name, lv, state.skillXp[s.id] || 0, lv * 50, generateRabbitSkill(s.name, lv)]);
+    });
+    downloadCSV(`토끼RPG_스킬현황_${today}.csv`, rows);
+  }
+}
+
+function exportJSON() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `토끼RPG_백업_${todayStr()}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 100);
+}
+
+function importJSON(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const imported = JSON.parse(ev.target.result);
+      if (!confirm('현재 데이터를 백업본으로 덮어씁니다. 계속할까요?')) return;
+      state = imported;
+      ensureSkillSlots();
+      saveState();
+      addLog('📥 백업 데이터 복원 완료');
+      render();
+      alert('복원 성공!');
+    } catch (err) {
+      alert('파일을 읽을 수 없습니다: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function setAvatarSVG(svgString) {
+  const avatar = document.getElementById('char-avatar');
+  avatar.innerHTML = '';
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(svgString, 'image/svg+xml');
+    const svg = doc.documentElement;
+    if (svg && svg.nodeName === 'svg') {
+      avatar.appendChild(document.importNode(svg, true));
+      return;
+    }
+  } catch (e) {}
+  avatar.innerHTML = svgString;
+}
+
+function render() {
+  const tier = getTier();
+  setAvatarSVG(tier.svg);
+  const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  document.getElementById('char-header').style.background = isDark ? tier.bgColorDark : tier.bgColor;
+  document.getElementById('char-title').textContent = tier.title;
+  document.getElementById('char-subtitle').textContent = `Lv. ${state.level} · 누적 ${state.totalXp.toLocaleString()} XP`;
+
+  const needed = xpForNextLevel();
+  const pct = Math.min(100, Math.round((state.xp / needed) * 100));
+  document.getElementById('xp-bar').style.width = pct + '%';
+  document.getElementById('xp-text').textContent = `${state.xp} / ${needed}`;
+
+  document.getElementById('stat-streak').textContent = state.streak;
+  document.getElementById('stat-days').textContent = calcDday();
+  document.getElementById('stat-gold').textContent = state.gold.toLocaleString();
+  document.getElementById('stat-bosses').textContent = state.bossesDefeated;
+
+  document.getElementById('hours-target-display').textContent = state.settings.hoursTarget;
+  document.getElementById('problems-target-display').textContent = state.settings.problemsTarget;
+  document.getElementById('boss-max-display').textContent = state.settings.maxScore;
+  document.getElementById('boss-threshold-display').textContent = `${state.settings.bossThreshold}점 이상 시 → 보스전 보상 획득! 🥕`;
+  document.getElementById('final-target-display').textContent = `목표: ${state.settings.bossThreshold}점 이상 (${state.settings.examName})`;
+  document.getElementById('final-reward-display').textContent = `최종 보상: ${state.rewardOptions.final || '보상 탭에서 설정'}`;
+  document.getElementById('character-info-display').textContent = `${tier.title} (Lv.${state.level})`;
+  document.getElementById('boss-score').max = state.settings.maxScore;
+  document.getElementById('final-score').max = state.settings.maxScore;
+
+  document.querySelectorAll('.cond-btn').forEach(b => {
+    b.classList.toggle('selected', b.dataset.cond === state.selectedCondition);
+  });
+
+  const subjectSelect = document.getElementById('input-subject');
+  if (subjectSelect) {
+    const currentVal = subjectSelect.value;
+    subjectSelect.innerHTML = state.subjects.map(s => `<option value="${s.id}">${s.icon || '📚'} ${s.name}</option>`).join('');
+    if (state.subjects.find(s => s.id === currentVal)) subjectSelect.value = currentVal;
+  }
+
+  const logList = document.getElementById('log-list');
+  if (state.log.length === 0) {
+    logList.innerHTML = '<p style="font-size: 12px; color: var(--text-tertiary); margin-top: 4px;">아직 모험을 시작하지 않았어요. 첫 공부를 기록해보세요!</p>';
+  } else {
+    logList.innerHTML = state.log.map(l =>
+      `<p style="font-size: 12px; margin: 4px 0; line-height: 1.5;"><span style="color: var(--text-tertiary);">${l.date.slice(5)}</span> ${l.text}</p>`
+    ).join('');
+  }
+
+  const skillList = document.getElementById('skill-list');
+  if (state.subjects.length === 0) {
+    skillList.innerHTML = '<p style="font-size: 12px; color: var(--text-tertiary);">설정 탭에서 과목을 추가해주세요</p>';
+  } else {
+    skillList.innerHTML = state.subjects.map(sub => {
+      const lv = state.skills[sub.id] || 1;
+      const xp = state.skillXp[sub.id] || 0;
+      const need = lv * 50;
+      const p = Math.round((xp / need) * 100);
+      const skillName = generateRabbitSkill(sub.name, lv);
+      return `
+        <div class="skill-row">
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+            <span style="font-size: 18px; min-width: 24px; text-align: center;">${sub.icon || '📚'}</span>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 6px;">
+                <span style="font-size: 13px; font-weight: 500;">${sub.name}</span>
+                <span style="font-size: 11px; color: var(--text-secondary); white-space: nowrap;">Lv.${lv}</span>
+              </div>
+              <p style="font-size: 11px; color: ${sub.color || '#888'}; margin-top: 2px; font-style: italic; line-height: 1.3;">"${skillName}"</p>
+            </div>
+          </div>
+          <div style="background: var(--bg-tertiary); height: 4px; border-radius: 2px; overflow: hidden; margin-bottom: 3px;">
+            <div style="background: ${sub.color || '#888'}; height: 100%; width: ${p}%; transition: width 0.3s;"></div>
+          </div>
+          <p style="font-size: 10px; color: var(--text-tertiary); margin: 0; text-align: right;">${xp}/${need} XP</p>
+        </div>
+      `;
+    }).join('');
+  }
+
+  ['daily', 'weekly', 'monthly'].forEach(t => {
+    const input = document.getElementById(`${t}-quest-input`);
+    if (input && document.activeElement !== input) input.value = state.questText[t] || '';
+    const cnt = document.getElementById(`${t}-clear-count`);
+    if (cnt) cnt.textContent = `클리어 ${state.questCleared[t]}회`;
+  });
+
+  ['daily', 'weekly', 'monthly', 'boss', 'final'].forEach(t => {
+    const input = document.getElementById(`reward-${t}-input`);
+    if (input && document.activeElement !== input) input.value = state.rewardOptions[t] || '';
+  });
+
+  document.getElementById('pending-daily').textContent = state.pending.daily;
+  document.getElementById('pending-weekly').textContent = state.pending.weekly;
+  document.getElementById('pending-monthly').textContent = state.pending.monthly;
+  document.getElementById('pending-boss').textContent = state.pending.boss;
+
+  const finalUnlocked = state.finalScore !== null && state.finalScore >= state.settings.bossThreshold;
+  const finalStatus = document.getElementById('final-status');
+  const finalClaim = document.getElementById('final-claim');
+  if (state.finalClaimed) {
+    finalStatus.textContent = '✓ 수령 완료';
+    finalClaim.textContent = '✓ 수령 완료';
+    finalClaim.disabled = true; finalClaim.style.opacity = '0.5';
+  } else if (finalUnlocked) {
+    finalStatus.textContent = '🎉 해제됨!';
+    finalClaim.textContent = '🎁 보상 받기';
+    finalClaim.disabled = false; finalClaim.style.opacity = '1';
+  } else {
+    finalStatus.textContent = `🔒 잠김 (실제 시험 ${state.settings.bossThreshold}점+ 필요)`;
+    finalClaim.textContent = '🔒 잠김';
+    finalClaim.disabled = true; finalClaim.style.opacity = '0.5';
+  }
+
+  const fsd = document.getElementById('final-score-display');
+  if (state.finalScore !== null) {
+    fsd.textContent = `🎯 기록된 ${state.settings.examName} 점수: ${state.finalScore}점` + (state.finalScore >= state.settings.bossThreshold ? ' — 최종 보스 격파! 🐲' : '');
+  } else {
+    fsd.textContent = '';
+  }
+
+  const claimHist = document.getElementById('claim-history');
+  if (state.claimHistory.length === 0) {
+    claimHist.innerHTML = '<p style="font-size: 11px; color: var(--text-tertiary);">아직 보상 기록 없음</p>';
+  } else {
+    claimHist.innerHTML = state.claimHistory.slice(0, 10).map(c =>
+      `<p style="font-size: 11px; margin: 3px 0; line-height: 1.4;"><span style="color: var(--text-tertiary);">${c.date.slice(5)}</span> [${c.tier}] ${c.reward}</p>`
+    ).join('');
+  }
+
+  const bossList = document.getElementById('boss-list');
+  if (state.bosses.length === 0) {
+    bossList.innerHTML = '<p style="font-size: 11px; color: #791F1F; margin-top: 8px;">아직 모의고사 기록 없음</p>';
+  } else {
+    bossList.innerHTML = '<p style="font-size: 11px; color: #791F1F; margin: 8px 0 4px;">📜 모의고사 전적</p>' +
+      state.bosses.slice(0, 8).map(b => {
+        const color = b.score >= state.settings.bossThreshold ? '#0F6E56' : b.score >= state.settings.midThreshold ? '#185FA5' : '#888780';
+        const tag = b.type === 'self' ? '🪞' : '🏫';
+        return `<div style="display: flex; justify-content: space-between; padding: 6px 10px; background: var(--bg-primary); border-radius: 6px; margin-bottom: 4px; font-size: 12px;">
+          <span style="color: var(--text-secondary);">${b.date.slice(5)} ${tag} ${b.name || ''}</span>
+          <span style="font-weight: 500; color: ${color};">${b.score}점</span>
+        </div>`;
+      }).join('');
+  }
+
+  const settingExamDate = document.getElementById('setting-exam-date');
+  if (settingExamDate && document.activeElement !== settingExamDate) settingExamDate.value = state.settings.examDate;
+  const settingExamName = document.getElementById('setting-exam-name');
+  if (settingExamName && document.activeElement !== settingExamName) settingExamName.value = state.settings.examName;
+  const settingHt = document.getElementById('setting-hours-target');
+  if (settingHt && document.activeElement !== settingHt) settingHt.value = state.settings.hoursTarget;
+  const settingPt = document.getElementById('setting-problems-target');
+  if (settingPt && document.activeElement !== settingPt) settingPt.value = state.settings.problemsTarget;
+  const settingMs = document.getElementById('setting-max-score');
+  if (settingMs && document.activeElement !== settingMs) settingMs.value = state.settings.maxScore;
+  const settingBt = document.getElementById('setting-boss-threshold');
+  if (settingBt && document.activeElement !== settingBt) settingBt.value = state.settings.bossThreshold;
+  const settingMt = document.getElementById('setting-mid-threshold');
+  if (settingMt && document.activeElement !== settingMt) settingMt.value = state.settings.midThreshold;
+
+  renderSubjectsEditor();
+
+  const stats = document.getElementById('stats-summary');
+  if (stats) {
+    const totalHours = state.studyHistory.reduce((s, h) => s + (h.hours || 0), 0);
+    const totalProblems = state.studyHistory.reduce((s, h) => s + (h.problems || 0), 0);
+    const totalQuests = state.questCleared.daily + state.questCleared.weekly + state.questCleared.monthly;
+    const totalBosses = state.bosses.length;
+    const bossesDefeated = state.bosses.filter(b => b.score >= state.settings.midThreshold).length;
+    const bestScore = state.bosses.length > 0 ? Math.max(...state.bosses.map(b => b.score)) : 0;
+    stats.innerHTML = `
+      📚 누적 공부: <b>${totalHours.toFixed(1)}시간</b>, <b>${totalProblems}문제</b><br>
+      📜 퀘스트 클리어: <b>${totalQuests}회</b> (단기 ${state.questCleared.daily} / 중기 ${state.questCleared.weekly} / 장기 ${state.questCleared.monthly})<br>
+      ⚔️ 모의고사: <b>${totalBosses}회 응시</b>, 보스 처치 <b>${bossesDefeated}회</b><br>
+      🏆 최고점: <b>${bestScore}점</b><br>
+      🥕 누적 당근: <b>${state.gold.toLocaleString()}</b><br>
+      🎁 보상 수령: <b>${state.claimHistory.length}회</b>
+    `;
+  }
+}
+
+document.querySelectorAll('.cond-btn').forEach(btn => {
+  btn.addEventListener('click', () => selectCondition(btn.dataset.cond));
+});
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.panel').forEach(p => p.style.display = 'none');
+    document.getElementById('panel-' + btn.dataset.tab).style.display = 'block';
+  });
+});
+
+if (window.matchMedia) {
+  const mq = window.matchMedia('(prefers-color-scheme: dark)');
+  if (mq.addEventListener) {
+    mq.addEventListener('change', () => render());
+  } else if (mq.addListener) {
+    mq.addListener(() => render());
+  }
+}
+
+loadState();
+render();
+</script>
+</body>
+</html>
